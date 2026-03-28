@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Diário de Treino — Willian</title>
+<!-- PWA: instalável na tela inicial -->
+<meta name="theme-color" content="#0a0a0a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Treino Log">
+<!-- Manifest inline via blob (não precisa de servidor) -->
+<script>
+(function(){
+  const manifest = {
+    name: "Diário de Treino — Willian",
+    short_name: "Treino Log",
+    description: "Registro de treinos ABC×2",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#0a0a0a",
+    theme_color: "#0a0a0a",
+    orientation: "portrait",
+    icons: [
+      {
+        src: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%230a0a0a'/><text x='96' y='130' font-size='110' text-anchor='middle'>💪</text></svg>`),
+        sizes: "192x192",
+        type: "image/svg+xml"
+      }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = url;
+  document.currentScript.parentNode.insertBefore(link, document.currentScript.nextSibling);
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface2: #1e1e1e;
+  --border: #2c2c2c;
+  --gold: #f5c842;
+  --gold2: #e8a020;
+  --blue: #1a3a6b;
+  --green: #3ddc84;
+  --red: #ff4d4d;
+  --orange: #ff8c42;
+  --text: #f0f0f0;
+  --muted: #555;
+  --muted2: #888;
+  --r: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(135deg, #0f1a2e 0%, #141414 60%);
+  border-bottom: 2px solid var(--gold);
+  padding: 12px 16px 10px;
+  position: sticky; top: 0; z-index: 200;
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.logo { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; }
+.logo span { color: #fff; }
+.date-nav { display: flex; align-items: center; gap: 8px; }
+.date-nav button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); width: 30px; height: 30px; border-radius: 8px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.date-label { font-size: 12px; font-weight: 600; min-width: 100px; text-align: center; color: var(--gold); }
+
+/* ── PROGRESSO SEMANAL ── */
+.week-dots { display: flex; gap: 6px; align-items: center; }
+.week-dot { width: 28px; height: 28px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+.week-dot.done { background: var(--gold); color: #000; border-color: var(--gold); }
+.week-dot.rest { background: var(--surface); color: var(--muted); border-style: dashed; }
+.week-label { font-size: 10px; color: var(--muted2); margin-left: auto; font-weight: 600; }
+
+/* ── BOTTOM NAV ── */
+/* FIX: bottom:60px para ficar acima da barra do tiiny.host (~50px) */
+.bottom-nav { position: fixed; bottom: 60px; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; padding: 8px 0 20px; z-index: 200; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 0; }
+.nav-icon { font-size: 20px; }
+.nav-label { font-size: 9px; color: var(--muted2); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.nav-item.active .nav-label { color: var(--gold); }
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 4px var(--gold)); }
+
+/* ── CONTENT ── */
+/* FIX: padding-bottom aumentado para compensar bottom-nav (60px) + barra tiiny.host (60px) */
+.content { padding: 12px 16px 160px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── SECTION TITLE ── */
+.sec-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin: 16px 0 10px; }
+.sec-sub { font-size: 11px; color: var(--muted2); margin-top: -8px; margin-bottom: 10px; }
+
+/* ── TREINO SELECTOR ── */
+.treino-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.treino-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 10px 6px; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.treino-btn.active { background: var(--gold); border-color: var(--gold); }
+.treino-btn.active .tb-name { color: #000; }
+.treino-btn.active .tb-foco { color: #333; }
+.tb-name { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: var(--gold); letter-spacing: 1px; }
+.treino-btn.active .tb-name { color: #000; }
+.tb-foco { font-size: 9px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+/* ── EXERCISE CARD ── */
+.ex-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 8px; overflow: hidden;
+}
+.ex-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 13px; cursor: pointer;
+}
+.ex-num { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; color: var(--gold); min-width: 24px; }
+.ex-info { flex: 1; }
+.ex-name { font-size: 13px; font-weight: 600; line-height: 1.2; }
+.ex-meta { display: flex; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+.tag {
+  font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.tag-series { background: rgba(245,200,66,0.15); color: var(--gold); }
+.tag-reps { background: rgba(61,220,132,0.12); color: var(--green); }
+.tag-method { background: rgba(255,140,66,0.15); color: var(--orange); }
+.ex-check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); background: transparent; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.ex-check.done { background: var(--green); border-color: var(--green); color: #000; }
+
+.ex-body { border-top: 1px solid var(--border); padding: 10px 13px; display: none; }
+.ex-body.open { display: block; }
+
+/* ── SÉRIE ROWS ── */
+.series-header { display: grid; grid-template-columns: 32px 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+.series-header span { font-size: 9px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.5px; text-align: center; font-weight: 600; }
+.serie-row { display: grid; grid-template-columns: 32px 1fr 1fr 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
+.serie-label { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--muted2); text-align: center; }
+.serie-label.prep { color: #555; font-size: 13px; }
+.serie-input {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 13px;
+  font-family: 'DM Sans', sans-serif; padding: 7px 4px;
+  text-align: center; width: 100%; transition: border-color 0.2s;
+}
+.serie-input:focus { outline: none; border-color: var(--gold); }
+.serie-input.filled { border-color: var(--green); color: var(--green); }
+.serie-done-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--muted2); font-size: 13px; padding: 7px 4px; text-align: center; cursor: pointer; transition: all 0.15s; }
+.serie-done-btn.ok { background: rgba(61,220,132,0.1); border-color: var(--green); color: var(--green); }
+
+.ex-obs { margin-top: 8px; }
+.ex-obs textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12px; font-family: 'DM Sans', sans-serif; padding: 8px 10px; resize: none; height: 50px; }
+
+.biset-label { font-size: 10px; color: var(--orange); font-weight: 700; text-align: center; padding: 3px 0; letter-spacing: 1px; }
+
+/* ── TIMER ── */
+.rest-timer { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.timer-btn { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12px; font-weight: 600; padding: 8px; cursor: pointer; text-align: center; }
+.timer-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
+.timer-display { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--gold); min-width: 55px; text-align: center; }
+
+/* ── SUMÁRIO TREINO ── */
+.treino-summary {
+  background: linear-gradient(135deg, #0f1a2e, var(--surface));
+  border: 1px solid var(--gold);
+  border-radius: var(--r); padding: 14px; margin-bottom: 12px;
+}
+.summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+.summary-item { text-align: center; }
+.summary-val { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; color: var(--gold); }
+.summary-lbl { font-size: 9px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── BUTTONS ── */
+.btn-gold { width: 100%; padding: 14px; background: var(--gold); color: #000; border: none; border-radius: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; letter-spacing: 3px; cursor: pointer; margin-top: 14px; font-weight: 800; }
+.btn-gold:active { opacity: 0.85; }
+.btn-outline { width: 100%; padding: 12px; background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 18px; letter-spacing: 2px; cursor: pointer; margin-top: 8px; font-weight: 700; }
+
+/* ── HISTÓRICO ── */
+.hist-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 13px 14px; margin-bottom: 8px; }
+.hist-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.hist-treino { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; color: var(--gold); }
+.hist-date { font-size: 11px; color: var(--muted2); }
+.hist-exs { display: flex; flex-direction: column; gap: 5px; }
+.hist-ex-row { display: flex; align-items: center; justify-content: space-between; }
+.hist-ex-name { font-size: 12px; color: var(--text); flex: 1; }
+.hist-ex-series { display: flex; gap: 4px; }
+.hist-serie-chip { font-size: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; color: var(--muted2); }
+.hist-serie-chip.has-data { border-color: var(--green); color: var(--green); }
+
+/* ── PROGRESS CHART ── */
+.prog-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 13px 14px; margin-bottom: 10px; }
+.prog-ex-select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; padding: 8px 10px; margin-bottom: 10px; }
+.prog-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.prog-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.prog-bar { width: 100%; background: var(--gold); border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.4s ease; }
+.prog-bar-lbl { font-size: 9px; color: var(--muted2); }
+.prog-bar-val { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: var(--gold); }
+
+/* ── NOVO TREINO ── */
+.novo-treino-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
+.form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; padding: 9px 12px; margin-bottom: 8px; }
+.ex-add-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.ex-add-row input { flex: 1; }
+.ex-add-row input:last-child { flex: 0 0 70px; }
+.mini-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--gold); font-size: 18px; padding: 6px 12px; cursor: pointer; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 14px; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">💪 <span>TREINO</span> LOG</div>
+    <div class="date-nav">
+      <button onclick="changeDay(-1)">‹</button>
+      <div class="date-label" id="dateLabel">Hoje</div>
+      <button onclick="changeDay(1)">›</button>
+    </div>
+  </div>
+  <div class="week-dots" id="weekDots"></div>
+</div>
+
+<div class="content">
+
+<!-- ═══════════════════════════════════════════════
+     PAGE: TREINO
+═══════════════════════════════════════════════ -->
+<div class="page active" id="page-treino">
+
+  <div class="treino-grid" id="treinoGrid"></div>
+
+  <div id="treinoContent"></div>
+
+  <button class="btn-gold" onclick="salvarTreino()">💾 SALVAR TREINO</button>
+  <button class="btn-outline" onclick="showNovoTreino()">＋ CRIAR NOVO TREINO</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE: HISTÓRICO
+═══════════════════════════════════════════════ -->
+<div class="page" id="page-historico">
+  <div class="sec-title">📊 Histórico</div>
+  <div class="sec-sub">Todos os treinos registrados</div>
+  <div id="historicoList"></div>
+  <button class="btn-outline" onclick="exportarJSON()" style="margin-top:10px">📤 EXPORTAR JSON</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE: PROGRESSO
+═══════════════════════════════════════════════ -->
+<div class="page" id="page-progresso">
+  <div class="sec-title">📈 Progresso de Carga</div>
+  <div class="sec-sub">Evolução por exercício — últimas sessões</div>
+  <div class="prog-card">
+    <select class="prog-ex-select" id="progExSelect" onchange="renderProgresso()">
+      <option value="">Selecione um exercício...</option>
+    </select>
+    <div class="prog-bars" id="progBars">
+      <div style="color:var(--muted2);font-size:12px;width:100%;text-align:center;align-self:center">Selecione um exercício acima</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end content -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('treino',this)"><div class="nav-icon">🏋️</div><div class="nav-label">Treino</div></div>
+  <div class="nav-item" onclick="switchPage('historico',this)"><div class="nav-icon">📋</div><div class="nav-label">Histórico</div></div>
+  <div class="nav-item" onclick="switchPage('progresso',this)"><div class="nav-icon">📈</div><div class="nav-label">Progresso</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Botão de instalação PWA -->
+<div id="pwa-install-bar" style="display:none;position:fixed;top:0;left:0;right:0;background:#f5c842;color:#000;padding:10px 16px;z-index:9999;align-items:center;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+  <span>📲 INSTALAR NA TELA INICIAL</span>
+  <div style="display:flex;gap:8px">
+    <button id="pwa-install-btn" style="background:#000;color:#f5c842;border:none;border-radius:8px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px">INSTALAR</button>
+    <button id="pwa-dismiss-btn" style="background:rgba(0,0,0,0.2);color:#000;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px">✕</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+// ─── DADOS DOS TREINOS (PDF Mauricio Godoi) ──────────────────────
+const TREINOS_BASE = {
+  'A': {
+    nome: 'Treino A', foco: 'Costas · Ombro · Bíceps',
+    exercicios: [
+      { id:'a1', ordem:1, nome:'Puxada Alta Aberta', series:4, series_prep:0, reps:'15/12/12/8', metodo:'Progressão de Carga' },
+      { id:'a2', ordem:2, nome:'Remada Curvada', series:3, series_prep:0, reps:'10', metodo:'Bi-Set', biset_com:'a3', obs_tecnica:'Levemente inclinados + Pico de contração 2s' },
+      { id:'a3', ordem:3, nome:'Puxada Unilateral', series:3, series_prep:0, reps:'10', metodo:'Bi-Set', biset_de:'a2', obs_tecnica:'+8 Parciais' },
+      { id:'a4', ordem:4, nome:'Face Pull', series:2, series_prep:0, reps:'12', metodo:'Bi-Set', biset_com:'a5' },
+      { id:'a5', ordem:5, nome:'Voador Inverso', series:2, series_prep:0, reps:'12', metodo:'Bi-Set', biset_de:'a4' },
+      { id:'a6', ordem:6, nome:'Encolhimento com Halter', series:3, series_prep:0, reps:'10', metodo:'' },
+      { id:'a7', ordem:7, nome:'Rosca Scott Barra W ou H', series:3, series_prep:0, reps:'12', metodo:'' },
+      { id:'a8', ordem:8, nome:'Rosca Martelo', series:3, series_prep:0, reps:'12', metodo:'' },
+    ]
+  },
+  'B': {
+    nome: 'Treino B', foco: 'Peitoral · Tríceps',
+    exercicios: [
+      { id:'b1', ordem:1, nome:'Supino Máquina', series:3, series_prep:0, reps:'15/12/10', metodo:'Progressão de Carga' },
+      { id:'b2', ordem:2, nome:'Supino Inclinado com Halter', series:3, series_prep:0, reps:'8-10', metodo:'Bi-Set', biset_com:'b3' },
+      { id:'b3', ordem:3, nome:'Crucifixo Inclinado com Halter', series:3, series_prep:0, reps:'8-10', metodo:'Bi-Set', biset_de:'b2' },
+      { id:'b4', ordem:4, nome:'Desenvolvimento Máquina', series:3, series_prep:0, reps:'10', metodo:'' },
+      { id:'b5', ordem:5, nome:'Voador Unilateral', series:3, series_prep:0, reps:'8', metodo:'Bi-Set', biset_com:'b6', obs_tecnica:'+8 Bilaterais' },
+      { id:'b6', ordem:6, nome:'Tríceps Barra Inversa', series:3, series_prep:0, reps:'15', metodo:'Bi-Set', biset_de:'b5' },
+      { id:'b7', ordem:7, nome:'Tríceps Francês', series:3, series_prep:0, reps:'15', metodo:'' },
+      { id:'b8', ordem:8, nome:'Prancha Isométrica', series:3, series_prep:0, reps:'MAX', metodo:'Isometria' },
+    ]
+  },
+  'C': {
+    nome: 'Treino C', foco: 'Pernas',
+    exercicios: [
+      { id:'c1', ordem:1, nome:'Leg Press 45°', series:4, series_prep:0, reps:'15/15/12/10', metodo:'Progressão de Carga' },
+      { id:'c2', ordem:2, nome:'Cadeira Extensora', series:3, series_prep:0, reps:'21', metodo:'Método 21' },
+      { id:'c3', ordem:3, nome:'Cadeira Adutora', series:3, series_prep:0, reps:'15', metodo:'Bi-Set', biset_com:'c4' },
+      { id:'c4', ordem:4, nome:'Stiff', series:3, series_prep:0, reps:'15', metodo:'Bi-Set', biset_de:'c3' },
+      { id:'c5', ordem:5, nome:'Flexora em Pé', series:3, series_prep:0, reps:'10', metodo:'', obs_tecnica:'+10 Parciais' },
+      { id:'c6', ordem:6, nome:'Abdominal Remador', series:3, series_prep:0, reps:'12', metodo:'' },
+      { id:'c7', ordem:7, nome:'Abdominal Canoa', series:3, series_prep:0, reps:'MAX', metodo:'' },
+      { id:'c8', ordem:8, nome:'Panturrilha Máquina Sentado', series:3, series_prep:0, reps:'15', metodo:'' },
+    ]
+  },
+  'A2': {
+    nome: 'Treino A2', foco: 'Antebraço · Bíceps · Costas',
+    exercicios: [
+      { id:'a21', ordem:1, nome:'Remada Máquina Triângulo', series:4, series_prep:0, reps:'12/12/10/8', metodo:'Progressão de Carga' },
+      { id:'a22', ordem:2, nome:'Remada Cavalinho Máquina', series:3, series_prep:0, reps:'12', metodo:'' },
+      { id:'a23', ordem:3, nome:'Pull Down', series:2, series_prep:0, reps:'10', metodo:'Bi-Set', biset_com:'a24' },
+      { id:'a24', ordem:4, nome:'Remada do Alto com Corda', series:2, series_prep:0, reps:'10', metodo:'Bi-Set', biset_de:'a23' },
+      { id:'a25', ordem:5, nome:'Rosca 45°', series:3, series_prep:0, reps:'12', metodo:'' },
+      { id:'a26', ordem:6, nome:'Rosca Inversa', series:3, series_prep:0, reps:'10', metodo:'Bi-Set', biset_com:'a27', obs_tecnica:'Com rotação do punho' },
+      { id:'a27', ordem:7, nome:'Rosca Punho', series:3, series_prep:0, reps:'10', metodo:'Bi-Set', biset_de:'a26' },
+      { id:'a28', ordem:8, nome:'Rotação de Punho com Halter', series:3, series_prep:0, reps:'10', metodo:'' },
+    ]
+  },
+  'B2': {
+    nome: 'Treino B2', foco: 'Peitoral · Tríceps',
+    exercicios: [
+      { id:'b21', ordem:1, nome:'Voador', series:3, series_prep:0, reps:'15/15/10', metodo:'Progressão de Carga' },
+      { id:'b22', ordem:2, nome:'Supino Reto', series:3, series_prep:0, reps:'10', metodo:'' },
+      { id:'b23', ordem:3, nome:'Cross Over Polia Alta', series:3, series_prep:0, reps:'10', metodo:'Bi-Set', biset_com:'b24' },
+      { id:'b24', ordem:4, nome:'Cross Over Polia Média', series:3, series_prep:0, reps:'10', metodo:'Bi-Set', biset_de:'b23' },
+      { id:'b25', ordem:5, nome:'Tríceps Barra Inversa', series:3, series_prep:0, reps:'15', metodo:'' },
+      { id:'b26', ordem:6, nome:'Tríceps Coice Unilateral Cross', series:3, series_prep:0, reps:'12', metodo:'' },
+      { id:'b27', ordem:7, nome:'Abdominal Infra Paralela', series:3, series_prep:0, reps:'12', metodo:'' },
+      { id:'b28', ordem:8, nome:'Abdominal Rolinho', series:3, series_prep:0, reps:'8', metodo:'' },
+    ]
+  },
+  'C2': {
+    nome: 'Treino C2', foco: 'Pernas',
+    exercicios: [
+      { id:'c21', ordem:1, nome:'Agachamento Livre', series:3, series_prep:0, reps:'15', metodo:'' },
+      { id:'c22', ordem:2, nome:'Búlgaro', series:3, series_prep:0, reps:'10', metodo:'' },
+      { id:'c23', ordem:3, nome:'Banco Lombar', series:3, series_prep:0, reps:'10-15', metodo:'' },
+      { id:'c24', ordem:4, nome:'Supra Perna Suspensa', series:3, series_prep:0, reps:'15', metodo:'' },
+      { id:'c25', ordem:5, nome:'Cadeira Abdutora', series:3, series_prep:0, reps:'15', metodo:'Com insistência' },
+      { id:'c26', ordem:6, nome:'Elevação Pélvica em Pé', series:3, series_prep:0, reps:'12', metodo:'' },
+      { id:'c27', ordem:7, nome:'Panturrilha Máquina / Leg Horizontal', series:3, series_prep:0, reps:'15', metodo:'' },
+      { id:'c28', ordem:8, nome:'Cadeira Flexora', series:3, series_prep:0, reps:'10', metodo:'', obs_tecnica:'+10 Parciais' },
+    ]
+  }
+};
+
+// ─── STATE ───────────────────────────────────────────────────────
+let currentDate = new Date();
+let history = JSON.parse(localStorage.getItem('treinoLog') || '{}');
+let treinos = JSON.parse(localStorage.getItem('treinosCustom') || 'null') || JSON.parse(JSON.stringify(TREINOS_BASE));
+let currentTreino = 'A';
+let sessionData = {}; // { exId: { series: [{peso, reps, done}], obs } }
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
+
+// ─── DATA ────────────────────────────────────────────────────────
+function dateKey(d) { return d.toISOString().split('T')[0]; }
+function formatDate(d) {
+  const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const today = new Date();
+  if (dateKey(d) === dateKey(today)) return 'HOJE';
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+function changeDay(n) {
+  currentDate.setDate(currentDate.getDate() + n);
+  document.getElementById('dateLabel').textContent = formatDate(currentDate);
+  loadSessionForDay();
+  buildWeekDots();
+}
+
+// ─── WEEK DOTS ───────────────────────────────────────────────────
+function buildWeekDots() {
+  const cont = document.getElementById('weekDots');
+  const today = new Date(currentDate);
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  const labels = ['S','T','Q','Q','S','S','D'];
+  cont.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const key = dateKey(d);
+    const hasTreino = !!history[key];
+    const isToday = key === dateKey(new Date());
+    const dot = document.createElement('div');
+    dot.className = 'week-dot' + (hasTreino ? ' done' : '') + (i === 5 || i === 6 ? ' rest' : '');
+    dot.textContent = hasTreino ? (history[key].treino || labels[i]) : labels[i];
+    dot.title = key;
+    cont.appendChild(dot);
+  }
+  const lbl = document.createElement('div');
+  const weekCount = Object.keys(history).length;
+  lbl.className = 'week-label';
+  lbl.textContent = `${weekCount} sessões`;
+  cont.appendChild(lbl);
+}
+
+// ─── PAGE SWITCH ──────────────────────────────────────────────────
+function switchPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  if (id === 'historico') renderHistorico();
+  if (id === 'progresso') populateProgExSelect();
+}
+
+// ─── TREINO GRID ─────────────────────────────────────────────────
+function buildTreinoGrid() {
+  const grid = document.getElementById('treinoGrid');
+  grid.innerHTML = '';
+  Object.keys(treinos).forEach(key => {
+    const t = treinos[key];
+    const btn = document.createElement('div');
+    btn.className = 'treino-btn' + (key === currentTreino ? ' active' : '');
+    btn.innerHTML = `<div class="tb-name">${key}</div><div class="tb-foco">${t.foco.split('·')[0].trim()}</div>`;
+    btn.onclick = () => { currentTreino = key; buildTreinoGrid(); renderTreino(); };
+    grid.appendChild(btn);
+  });
+}
+
+// ─── RENDER TREINO ────────────────────────────────────────────────
+function renderTreino() {
+  const t = treinos[currentTreino];
+  const cont = document.getElementById('treinoContent');
+  const doneCount = Object.values(sessionData).filter(d => d && d.done).length;
+  const totalEx = t.exercicios.length;
+  cont.innerHTML = `
+    <div class="treino-summary">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;color:var(--gold)">${t.nome.toUpperCase()} — ${t.foco}</div>
+      <div class="summary-grid">
+        <div class="summary-item"><div class="summary-val">${totalEx}</div><div class="summary-lbl">Exercícios</div></div>
+        <div class="summary-item"><div class="summary-val">${doneCount}</div><div class="summary-lbl">Concluídos</div></div>
+        <div class="summary-item"><div class="summary-val" id="sumTimer">0:00</div><div class="summary-lbl">Tempo</div></div>
+      </div>
+      <div class="rest-timer" style="margin-top:10px">
+        <button class="timer-btn" onclick="setTimer(60)">60s</button>
+        <button class="timer-btn" onclick="setTimer(90)">90s</button>
+        <div class="timer-display" id="timerDisplay">—</div>
+        <button class="timer-btn" id="timerStartBtn" onclick="toggleTimer()">▶</button>
+      </div>
+    </div>
+  `;
+  t.exercicios.forEach((ex, idx) => {
+    const sd = sessionData[ex.id] || { series: [], obs: '', done: false };
+    const isDone = sd.done;
+    let bisetHtml = '';
+    if (ex.metodo && ex.metodo.includes('Bi-Set') && ex.biset_com) bisetHtml = `<div class="biset-label">⚡ BI-SET COM #${treinos[currentTreino].exercicios.find(e=>e.id===ex.biset_com)?.ordem || '?'}</div>`;
+    if (ex.metodo && ex.metodo.includes('Bi-Set') && ex.biset_de) bisetHtml = `<div class="biset-label">↑ CONTINUAÇÃO DO BI-SET</div>`;
+    let seriesHtml = `<div class="series-header"><span>Série</span><span>Peso (kg)</span><span>Reps</span><span>✓</span></div>`;
+    for (let s = 0; s < ex.series; s++) {
+      const sd_s = sd.series[s] || {};
+      const filled = sd_s.peso || sd_s.reps ? ' filled' : '';
+      const doneCls = sd_s.done ? ' ok' : '';
+      seriesHtml += `
+        <div class="serie-row">
+          <div class="serie-label">${s+1}</div>
+          <input class="serie-input${filled}" type="number" step="0.5" placeholder="kg"
+            value="${sd_s.peso || ''}" 
+            onchange="setSerie('${ex.id}',${s},'peso',this.value)"
+            oninput="this.classList.toggle('filled',!!this.value)">
+          <input class="serie-input${filled}" type="number" placeholder="reps"
+            value="${sd_s.reps || ''}"
+            onchange="setSerie('${ex.id}',${s},'reps',this.value)"
+            oninput="this.classList.toggle('filled',!!this.value)">
+          <div class="serie-done-btn${doneCls}" onclick="toggleSerieDone('${ex.id}',${s},this)">
+            ${sd_s.done ? '✓' : '○'}
+          </div>
+        </div>`;
+    }
+    const card = document.createElement('div');
+    card.className = 'ex-card';
+    card.innerHTML = `
+      ${bisetHtml}
+      <div class="ex-header" onclick="toggleEx('${ex.id}')">
+        <div class="ex-num">${ex.ordem}</div>
+        <div class="ex-info">
+          <div class="ex-name">${ex.nome}</div>
+          <div class="ex-meta">
+            <span class="tag tag-series">${ex.series} séries</span>
+            <span class="tag tag-reps">${ex.reps} reps</span>
+            ${ex.metodo ? `<span class="tag tag-method">${ex.metodo}</span>` : ''}
+          </div>
+          ${ex.obs_tecnica ? `<div style="font-size:10px;color:var(--orange);margin-top:3px">⚡ ${ex.obs_tecnica}</div>` : ''}
+        </div>
+        <div class="ex-check${isDone ? ' done' : ''}" onclick="toggleExDone(event,'${ex.id}')">${isDone ? '✓' : ''}</div>
+      </div>
+      <div class="ex-body" id="body-${ex.id}">
+        ${seriesHtml}
+        <div class="ex-obs">
+          <textarea placeholder="Obs: sensação, técnica, ajuste de carga..." 
+            onchange="setObs('${ex.id}',this.value)">${sd.obs || ''}</textarea>
+        </div>
+      </div>`;
+    cont.appendChild(card);
+  });
+  startSessionTimer();
+}
+
+// ─── EXERCISE TOGGLE ─────────────────────────────────────────────
+function toggleEx(id) {
+  const body = document.getElementById('body-' + id);
+  if (body) body.classList.toggle('open');
+}
+
+// ─── SERIE DATA ───────────────────────────────────────────────────
+function ensureSD(exId) {
+  if (!sessionData[exId]) sessionData[exId] = { series: [], obs: '', done: false };
+}
+function setSerie(exId, idx, field, val) {
+  ensureSD(exId);
+  if (!sessionData[exId].series[idx]) sessionData[exId].series[idx] = {};
+  sessionData[exId].series[idx][field] = val;
+}
+function toggleSerieDone(exId, idx, el) {
+  ensureSD(exId);
+  if (!sessionData[exId].series[idx]) sessionData[exId].series[idx] = {};
+  sessionData[exId].series[idx].done = !sessionData[exId].series[idx].done;
+  el.classList.toggle('ok');
+  el.textContent = sessionData[exId].series[idx].done ? '✓' : '○';
+}
+function toggleExDone(e, exId) {
+  e.stopPropagation();
+  ensureSD(exId);
+  sessionData[exId].done = !sessionData[exId].done;
+  const btn = e.currentTarget;
+  btn.classList.toggle('done');
+  btn.textContent = sessionData[exId].done ? '✓' : '';
+  const doneCount = Object.values(sessionData).filter(d => d && d.done).length;
+  const el = document.querySelector('.summary-item:nth-child(2) .summary-val');
+  if (el) el.textContent = doneCount;
+}
+function setObs(exId, val) {
+  ensureSD(exId);
+  sessionData[exId].obs = val;
+}
+
+// ─── TIMER ───────────────────────────────────────────────────────
+let sessionStart = null;
+let sessionTimerInterval = null;
+function startSessionTimer() {
+  if (!sessionStart) sessionStart = Date.now();
+  clearInterval(sessionTimerInterval);
+  sessionTimerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    const el = document.getElementById('sumTimer');
+    if (el) el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+let restTimerInterval = null;
+let restSeconds = 0;
+function setTimer(s) {
+  clearInterval(restTimerInterval);
+  restSeconds = s;
+  timerRunning = false;
+  document.getElementById('timerDisplay').textContent = `${s}s`;
+  document.getElementById('timerStartBtn').textContent = '▶';
+}
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(restTimerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶';
+  } else {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '⏸';
+    restTimerInterval = setInterval(() => {
+      restSeconds--;
+      document.getElementById('timerDisplay').textContent = restSeconds > 0 ? `${restSeconds}s` : '✅ GO!';
+      if (restSeconds <= 0) {
+        clearInterval(restTimerInterval);
+        timerRunning = false;
+        document.getElementById('timerStartBtn').textContent = '▶';
+        if ('vibrate' in navigator) navigator.vibrate([200,100,200]);
+      }
+    }, 1000);
+  }
+}
+
+// ─── SALVAR ───────────────────────────────────────────────────────
+function salvarTreino() {
+  const key = dateKey(currentDate);
+  const elapsed = sessionStart ? Math.floor((Date.now() - sessionStart) / 1000) : 0;
+  history[key] = {
+    treino: currentTreino,
+    data: key,
+    duracao: elapsed,
+    exercicios: JSON.parse(JSON.stringify(sessionData))
+  };
+  localStorage.setItem('treinoLog', JSON.stringify(history));
+  buildWeekDots();
+  renderHistorico();
+  populateProgExSelect();
+  showToast('✅ Treino salvo!');
+}
+
+// ─── LOAD SESSION ─────────────────────────────────────────────────
+function loadSessionForDay() {
+  const key = dateKey(currentDate);
+  const d = history[key];
+  sessionData = {};
+  sessionStart = null;
+  if (d) {
+    currentTreino = d.treino;
+    sessionData = JSON.parse(JSON.stringify(d.exercicios || {}));
+    sessionStart = Date.now() - (d.duracao || 0) * 1000;
+  }
+  buildTreinoGrid();
+  renderTreino();
+}
+
+// ─── HISTÓRICO ────────────────────────────────────────────────────
+function renderHistorico() {
+  const cont = document.getElementById('historicoList');
+  const keys = Object.keys(history).sort().reverse();
+  if (!keys.length) { cont.innerHTML = '<div style="color:var(--muted2);text-align:center;padding:40px 0;font-size:13px">Nenhum treino registrado ainda.</div>'; return; }
+  cont.innerHTML = keys.map(k => {
+    const d = history[k];
+    const t = treinos[d.treino];
+    const dur = d.duracao ? `${Math.floor(d.duracao/60)}min` : '—';
+    const exRows = t ? t.exercicios.map(ex => {
+      const sd = d.exercicios?.[ex.id];
+      const series = sd?.series || [];
+      const chips = series.map((s,i) => {
+        const hasData = s && (s.peso || s.reps);
+        return `<span class="hist-serie-chip${hasData?' has-data':''}">${s?.peso ? s.peso+'kg' : '—'}/${s?.reps || '—'}</span>`;
+      }).join('');
+      return `<div class="hist-ex-row"><span class="hist-ex-name">${ex.ordem}. ${ex.nome}</span><div class="hist-ex-series">${chips}</div></div>`;
+    }).join('') : '';
+    return `<div class="hist-card">
+      <div class="hist-top">
+        <div class="hist-treino">${d.treino} <span style="font-size:14px;color:var(--muted2)">${t?.foco || ''}</span></div>
+        <div style="text-align:right"><div class="hist-date">${k}</div><div style="font-size:11px;color:var(--gold)">${dur}</div></div>
+      </div>
+      <div class="hist-exs">${exRows}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── PROGRESSO ────────────────────────────────────────────────────
+function populateProgExSelect() {
+  const sel = document.getElementById('progExSelect');
+  const exMap = {};
+  Object.values(treinos).forEach(t => t.exercicios.forEach(ex => { exMap[ex.id] = ex.nome; }));
+  sel.innerHTML = '<option value="">Selecione um exercício...</option>';
+  Object.entries(exMap).forEach(([id, nome]) => {
+    sel.innerHTML += `<option value="${id}">${nome}</option>`;
+  });
+}
+function renderProgresso() {
+  const exId = document.getElementById('progExSelect').value;
+  const cont = document.getElementById('progBars');
+  if (!exId) { cont.innerHTML = '<div style="color:var(--muted2);font-size:12px;width:100%;text-align:center;align-self:center">Selecione um exercício acima</div>'; return; }
+  const sessions = Object.entries(history)
+    .filter(([k,v]) => v.exercicios?.[exId]?.series?.some(s => s?.peso))
+    .sort(([a],[b]) => a.localeCompare(b))
+    .slice(-8);
+  if (!sessions.length) { cont.innerHTML = '<div style="color:var(--muted2);font-size:12px;width:100%;text-align:center;align-self:center">Sem dados para este exercício ainda</div>'; return; }
+  const maxPeso = Math.max(...sessions.map(([k,v]) => Math.max(...(v.exercicios[exId].series?.map(s => parseFloat(s?.peso)||0)||[0]))));
+  cont.innerHTML = sessions.map(([k,v]) => {
+    const series = v.exercicios[exId].series || [];
+    const maxS = Math.max(...series.map(s => parseFloat(s?.peso)||0));
+    const pct = maxPeso > 0 ? (maxS / maxPeso * 100) : 0;
+    const label = k.slice(5);
+    return `<div class="prog-bar-wrap">
+      <div class="prog-bar-val">${maxS}kg</div>
+      <div class="prog-bar" style="height:${Math.max(4,pct*0.7)}px"></div>
+      <div class="prog-bar-lbl">${label}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── NOVO TREINO ──────────────────────────────────────────────────
+function showNovoTreino() {
+  const cont = document.getElementById('treinoContent');
+  cont.innerHTML = `
+    <div class="novo-treino-form">
+      <div class="sec-title" style="margin-top:0">＋ NOVO TREINO</div>
+      <input class="form-input" id="nt-key" placeholder="Sigla (ex: D, E, F...)" maxlength="3">
+      <input class="form-input" id="nt-nome" placeholder="Nome (ex: Treino D)">
+      <input class="form-input" id="nt-foco" placeholder="Foco (ex: Ombro · Trapézio)">
+      <div class="sec-title" style="font-size:16px;margin:10px 0 6px">Exercícios</div>
+      <div id="nt-exs"></div>
+      <button class="mini-btn" onclick="addNovoEx()" style="width:100%;margin-bottom:8px">＋ Adicionar Exercício</button>
+      <button class="btn-gold" onclick="salvarNovoTreino()">SALVAR TREINO</button>
+      <button class="btn-outline" onclick="loadSessionForDay()">CANCELAR</button>
+    </div>`;
+  addNovoEx();
+}
+let novoExCount = 0;
+function addNovoEx() {
+  novoExCount++;
+  const cont = document.getElementById('nt-exs');
+  const div = document.createElement('div');
+  div.className = 'ex-add-row';
+  div.innerHTML = `
+    <input class="form-input" placeholder="Nome do exercício" id="nt-ex-nome-${novoExCount}" style="margin:0">
+    <input class="form-input" placeholder="Séries" type="number" id="nt-ex-series-${novoExCount}" style="margin:0;flex:0 0 65px">
+    <input class="form-input" placeholder="Reps" id="nt-ex-reps-${novoExCount}" style="margin:0;flex:0 0 65px">`;
+  cont.appendChild(div);
+}
+function salvarNovoTreino() {
+  const key = document.getElementById('nt-key').value.trim().toUpperCase();
+  const nome = document.getElementById('nt-nome').value.trim();
+  const foco = document.getElementById('nt-foco').value.trim();
+  if (!key || !nome) { showToast('⚠️ Preencha sigla e nome'); return; }
+  const exs = [];
+  for (let i = 1; i <= novoExCount; i++) {
+    const nEl = document.getElementById(`nt-ex-nome-${i}`);
+    if (!nEl || !nEl.value.trim()) continue;
+    exs.push({
+      id: key.toLowerCase() + i,
+      ordem: exs.length + 1,
+      nome: nEl.value.trim(),
+      series: parseInt(document.getElementById(`nt-ex-series-${i}`)?.value) || 3,
+      series_prep: 0,
+      reps: document.getElementById(`nt-ex-reps-${i}`)?.value || '10',
+      metodo: ''
+    });
+  }
+  treinos[key] = { nome, foco, exercicios: exs };
+  localStorage.setItem('treinosCustom', JSON.stringify(treinos));
+  currentTreino = key;
+  novoExCount = 0;
+  buildTreinoGrid();
+  renderTreino();
+  showToast(`✅ Treino ${key} criado!`);
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────
+function exportarJSON() {
+  const blob = new Blob([JSON.stringify({ history, treinos }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `treino_log_${dateKey(new Date())}.json`;
+  a.click();
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────
+document.getElementById('dateLabel').textContent = formatDate(currentDate);
+buildWeekDots();
+buildTreinoGrid();
+renderTreino();
+
+// ─── PWA: SERVICE WORKER & INSTALL ───────────────────────────────
+(function() {
+  const swCode = `
+const CACHE = 'treino-log-v1';
+self.addEventListener('install', e => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(clients.claim());
+});
+self.addEventListener('fetch', e => {
+  if (e.request.url.includes('fonts.googleapis') || e.request.url.includes('fonts.gstatic')) {
+    e.respondWith(
+      caches.open(CACHE).then(cache =>
+        fetch(e.request).then(r => { cache.put(e.request, r.clone()); return r; }).catch(() => cache.match(e.request))
+      )
+    );
+  }
+  else if (e.request.mode === 'navigate') {
+    e.respondWith(
+      caches.open(CACHE).then(cache =>
+        fetch(e.request).then(r => { cache.put(e.request, r.clone()); return r; }).catch(() => cache.match(e.request))
+      )
+    );
+  }
+});
+`;
+  const swBlob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(swBlob);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register(swUrl, { scope: './' })
+      .then(() => console.log('[PWA] Service Worker registrado'))
+      .catch(err => console.warn('[PWA] SW falhou:', err));
+  }
+
+  let deferredPrompt = null;
+  const bar = document.getElementById('pwa-install-bar');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    bar.style.display = 'flex';
+    document.querySelector('.header').style.top = '44px';
+  });
+
+  installBtn.addEventListener('click', () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(choice => {
+      if (choice.outcome === 'accepted') showToast('✅ App instalado!');
+      deferredPrompt = null;
+      bar.style.display = 'none';
+      document.querySelector('.header').style.top = '0';
+    });
+  });
+
+  dismissBtn.addEventListener('click', () => {
+    bar.style.display = 'none';
+    document.querySelector('.header').style.top = '0';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    bar.style.display = 'none';
+    document.querySelector('.header').style.top = '0';
+    showToast('✅ App instalado com sucesso!');
+  });
+})();
+</script>
+</body>
+</html>

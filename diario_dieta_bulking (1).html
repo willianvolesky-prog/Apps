@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Diário de Dieta — Willian</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --surface: #181818;
+  --surface2: #222222;
+  --border: #2a2a2a;
+  --accent: #c8f045;
+  --accent2: #45f0a0;
+  --red: #f04545;
+  --orange: #f0a045;
+  --text: #f0f0f0;
+  --muted: #666;
+  --card-r: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+/* HEADER */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px 10px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); }
+.date-nav { display: flex; align-items: center; gap: 10px; }
+.date-nav button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); width: 32px; height: 32px; border-radius: 8px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.date-label { font-size: 13px; font-weight: 600; min-width: 110px; text-align: center; }
+
+/* KCAL BAR */
+.kcal-bar { background: var(--surface2); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+.kcal-info { flex: 1; }
+.kcal-numbers { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+.kcal-numbers span { color: var(--accent); }
+.kcal-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.kcal-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.kcal-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.4s ease; }
+.kcal-pct { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--accent); min-width: 40px; text-align: right; }
+
+/* TABS */
+.tabs { display: flex; gap: 6px; padding: 12px 16px 0; }
+.tab { flex: 1; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; text-align: center; transition: all 0.2s; }
+.tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+/* CONTENT */
+.content { padding: 12px 16px 100px; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* MEAL CARDS */
+.meal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-r);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.meal-card.status-ok { border-color: var(--accent2); }
+.meal-card.status-fora { border-color: var(--orange); }
+.meal-card.status-errado { border-color: var(--red); }
+
+.meal-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+.meal-icon { font-size: 20px; width: 36px; text-align: center; }
+.meal-title-block { flex: 1; }
+.meal-name { font-size: 14px; font-weight: 600; }
+.meal-kcal { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.meal-status-btn {
+  display: flex; gap: 6px;
+}
+.status-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.status-dot.ok { border-color: var(--accent2); }
+.status-dot.ok.active { background: var(--accent2); }
+.status-dot.fora { border-color: var(--orange); }
+.status-dot.fora.active { background: var(--orange); }
+.status-dot.errado { border-color: var(--red); }
+.status-dot.errado.active { background: var(--red); }
+
+.meal-body { padding: 0 14px 12px; border-top: 1px solid var(--border); }
+.meal-body.hidden { display: none; }
+
+.food-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+.food-item:last-child { border-bottom: none; }
+.food-name { font-size: 12px; color: var(--text); flex: 1; }
+.food-qty {
+  display: flex; align-items: center; gap: 4px;
+}
+.qty-input {
+  width: 52px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-size: 12px; font-family: 'DM Sans', sans-serif;
+  padding: 4px 6px; text-align: center;
+}
+.qty-unit { font-size: 11px; color: var(--muted); min-width: 20px; }
+.food-prot { font-size: 11px; color: var(--accent); font-weight: 600; min-width: 32px; text-align: right; }
+
+.meal-totals {
+  display: flex; gap: 8px; margin-top: 10px;
+  padding-top: 8px; border-top: 1px solid var(--border);
+}
+.macro-pill {
+  flex: 1; background: var(--surface2); border-radius: 8px;
+  padding: 6px 8px; text-align: center;
+}
+.macro-pill-val { font-family: 'Bebas Neue', sans-serif; font-size: 15px; }
+.macro-pill-lbl { font-size: 9px; color: var(--muted); }
+
+.obs-area { margin-top: 10px; }
+.obs-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 12px; font-family: 'DM Sans', sans-serif;
+  padding: 8px 10px; resize: none; height: 52px;
+}
+
+/* TRACKERS */
+.tracker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+
+.tracker-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--card-r); padding: 14px;
+}
+.tracker-card.full { grid-column: 1 / -1; }
+.tracker-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+.tracker-value { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--accent); letter-spacing: 1px; }
+.tracker-unit { font-size: 11px; color: var(--muted); }
+
+/* ÁGUA */
+.agua-drops { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.drop-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 2px solid var(--border); background: transparent;
+  font-size: 18px; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.drop-btn.filled { background: #1a4fff; border-color: #4a7fff; }
+
+/* SUPLEMENTOS */
+.supl-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.supl-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface2); border-radius: 10px; padding: 10px 12px;
+}
+.supl-name { font-size: 13px; font-weight: 500; }
+.supl-dose { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.supl-check {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid var(--border); background: transparent;
+  font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.supl-check.done { background: var(--accent2); border-color: var(--accent2); color: #000; }
+
+/* PESO */
+.peso-input-big {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px; padding: 10px 14px; text-align: center; letter-spacing: 2px;
+  margin-top: 8px;
+}
+
+/* HISTÓRICO */
+.hist-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--card-r); padding: 12px 14px; margin-bottom: 8px;
+}
+.hist-date { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.hist-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.hist-meals { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+.hist-badge {
+  font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600;
+}
+.hist-badge.ok { background: rgba(69,240,160,0.15); color: var(--accent2); }
+.hist-badge.fora { background: rgba(240,160,69,0.15); color: var(--orange); }
+.hist-badge.errado { background: rgba(240,69,69,0.15); color: var(--red); }
+
+/* EXPORT */
+.export-btn {
+  width: 100%; padding: 14px; background: var(--accent); color: #000;
+  border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; letter-spacing: 2px; cursor: pointer; margin-top: 14px;
+}
+.export-btn:active { opacity: 0.85; }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; padding: 8px 0 20px;
+}
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 0; }
+.nav-icon { font-size: 22px; }
+.nav-label { font-size: 9px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.nav-item.active .nav-label { color: var(--accent); }
+
+/* NOTA OBS */
+.nota-geral { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); padding: 14px; margin-bottom: 10px; }
+.nota-geral textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 12px; font-family: 'DM Sans', sans-serif; padding: 8px 10px; resize: none; height: 70px; }
+
+.section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--accent); margin: 14px 0 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">🥩 BULKING LOG</div>
+    <div class="date-nav">
+      <button onclick="changeDay(-1)">‹</button>
+      <div class="date-label" id="dateLabel"></div>
+      <button onclick="changeDay(1)">›</button>
+    </div>
+  </div>
+  <div class="kcal-bar">
+    <div class="kcal-info">
+      <div class="kcal-numbers"><span id="kcalDone">0</span> / 3250 kcal</div>
+      <div class="kcal-sub">META BULKING — SUPERÁVIT +300 kcal</div>
+    </div>
+    <div class="kcal-track"><div class="kcal-fill" id="kcalFill" style="width:0%"></div></div>
+    <div class="kcal-pct" id="kcalPct">0%</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('refeicoes', this)">🍽 Refeições</div>
+  <div class="tab" onclick="switchTab('controle', this)">💧 Controle</div>
+  <div class="tab" onclick="switchTab('historico', this)">📊 Histórico</div>
+</div>
+
+<div class="content">
+
+<!-- SEÇÃO REFEIÇÕES -->
+<div class="section active" id="sec-refeicoes">
+
+  <!-- CAFÉ -->
+  <div class="meal-card" id="card-cafe">
+    <div class="meal-header" onclick="toggleMeal('cafe')">
+      <div class="meal-icon">☀️</div>
+      <div class="meal-title-block">
+        <div class="meal-name">Café da Manhã</div>
+        <div class="meal-kcal" id="kcal-cafe">564 kcal • 26g prot</div>
+      </div>
+      <div class="meal-status-btn">
+        <button class="status-dot ok" onclick="setStatus(event,'cafe','ok')" title="Certo">✓</button>
+        <button class="status-dot fora" onclick="setStatus(event,'cafe','fora')" title="Fora">🍽</button>
+        <button class="status-dot errado" onclick="setStatus(event,'cafe','errado')" title="Errado">✗</button>
+      </div>
+    </div>
+    <div class="meal-body hidden" id="body-cafe">
+      <div class="food-item">
+        <span class="food-name">Atum (½ lata)</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="52" onchange="recalc()" id="q-atum-c"><span class="qty-unit">g</span></div>
+        <span class="food-prot">14g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Requeijão Light</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="20" onchange="recalc()" id="q-req-c"><span class="qty-unit">g</span></div>
+        <span class="food-prot">1g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Pão Francês</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="1" onchange="recalc()" id="q-pao-c"><span class="qty-unit">un</span></div>
+        <span class="food-prot">7g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Leite Integral</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="150" onchange="recalc()" id="q-leite-c"><span class="qty-unit">ml</span></div>
+        <span class="food-prot">5g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Banana / Mamão</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="150" onchange="recalc()" id="q-fruta-c"><span class="qty-unit">g</span></div>
+        <span class="food-prot">1g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Mel</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="30" onchange="recalc()" id="q-mel-c"><span class="qty-unit">g</span></div>
+        <span class="food-prot">0g</span>
+      </div>
+      <div class="meal-totals">
+        <div class="macro-pill"><div class="macro-pill-val" style="color:var(--accent)">564</div><div class="macro-pill-lbl">KCAL</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#ff9f45">95g</div><div class="macro-pill-lbl">CARB</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:var(--accent2)">26g</div><div class="macro-pill-lbl">PROT</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#aaa">11g</div><div class="macro-pill-lbl">GORD</div></div>
+      </div>
+      <div class="obs-area"><textarea class="obs-input" placeholder="Observação do café..." id="obs-cafe"></textarea></div>
+    </div>
+  </div>
+
+  <!-- ALMOÇO -->
+  <div class="meal-card" id="card-almoco">
+    <div class="meal-header" onclick="toggleMeal('almoco')">
+      <div class="meal-icon">🥗</div>
+      <div class="meal-title-block">
+        <div class="meal-name">Almoço</div>
+        <div class="meal-kcal" id="kcal-almoco">748 kcal • 56g prot</div>
+      </div>
+      <div class="meal-status-btn">
+        <button class="status-dot ok" onclick="setStatus(event,'almoco','ok')">✓</button>
+        <button class="status-dot fora" onclick="setStatus(event,'almoco','fora')">🍽</button>
+        <button class="status-dot errado" onclick="setStatus(event,'almoco','errado')">✗</button>
+      </div>
+    </div>
+    <div class="meal-body hidden" id="body-almoco">
+      <div class="food-item">
+        <span class="food-name">Macarrão cozido</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="265" onchange="recalc()" id="q-mac"><span class="qty-unit">g</span></div>
+        <span class="food-prot">7g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Lombo / Patinho Pedaço</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="150" onchange="recalc()" id="q-prot-alm"><span class="qty-unit">g</span></div>
+        <span class="food-prot">42g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Feijão / Lentilha</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="100" onchange="recalc()" id="q-feijao"><span class="qty-unit">g</span></div>
+        <span class="food-prot">8g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Uva Passa</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="30" onchange="recalc()" id="q-uva-alm"><span class="qty-unit">g</span></div>
+        <span class="food-prot">0g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Legumes (abobrinha/brócolis)</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="80" onchange="recalc()" id="q-leg"><span class="qty-unit">g</span></div>
+        <span class="food-prot">1g</span>
+      </div>
+      <div class="meal-totals">
+        <div class="macro-pill"><div class="macro-pill-val" style="color:var(--accent)">848</div><div class="macro-pill-lbl">KCAL</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#ff9f45">112g</div><div class="macro-pill-lbl">CARB</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:var(--accent2)">58g</div><div class="macro-pill-lbl">PROT</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#aaa">16g</div><div class="macro-pill-lbl">GORD</div></div>
+      </div>
+      <div class="obs-area"><textarea class="obs-input" placeholder="Observação do almoço..." id="obs-almoco"></textarea></div>
+    </div>
+  </div>
+
+  <!-- LANCHE -->
+  <div class="meal-card" id="card-lanche">
+    <div class="meal-header" onclick="toggleMeal('lanche')">
+      <div class="meal-icon">🥤</div>
+      <div class="meal-title-block">
+        <div class="meal-name">Lanche da Tarde</div>
+        <div class="meal-kcal" id="kcal-lanche">918 kcal • 35g prot</div>
+      </div>
+      <div class="meal-status-btn">
+        <button class="status-dot ok" onclick="setStatus(event,'lanche','ok')">✓</button>
+        <button class="status-dot fora" onclick="setStatus(event,'lanche','fora')">🍽</button>
+        <button class="status-dot errado" onclick="setStatus(event,'lanche','errado')">✗</button>
+      </div>
+    </div>
+    <div class="meal-body hidden" id="body-lanche">
+      <div class="food-item">
+        <span class="food-name">Banana / Mamão</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="150" onchange="recalc()" id="q-fruta-l"><span class="qty-unit">g</span></div>
+        <span class="food-prot">1g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Aveia</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="10" onchange="recalc()" id="q-aveia"><span class="qty-unit">g</span></div>
+        <span class="food-prot">2g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Leite Integral</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="200" onchange="recalc()" id="q-leite-l"><span class="qty-unit">ml</span></div>
+        <span class="food-prot">7g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Mel</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="20" onchange="recalc()" id="q-mel-l"><span class="qty-unit">g</span></div>
+        <span class="food-prot">0g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Pasta de Amendoim</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="20" onchange="recalc()" id="q-amend"><span class="qty-unit">g</span></div>
+        <span class="food-prot">5g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Pão Francês (×2)</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="2" onchange="recalc()" id="q-pao-l"><span class="qty-unit">un</span></div>
+        <span class="food-prot">14g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Ovos (×2)</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="2" onchange="recalc()" id="q-ovo-l"><span class="qty-unit">un</span></div>
+        <span class="food-prot">13g</span>
+      </div>
+      <div class="meal-totals">
+        <div class="macro-pill"><div class="macro-pill-val" style="color:var(--accent)">918</div><div class="macro-pill-lbl">KCAL</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#ff9f45">129g</div><div class="macro-pill-lbl">CARB</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:var(--accent2)">35g</div><div class="macro-pill-lbl">PROT</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#aaa">32g</div><div class="macro-pill-lbl">GORD</div></div>
+      </div>
+      <div class="obs-area"><textarea class="obs-input" placeholder="Observação do lanche..." id="obs-lanche"></textarea></div>
+    </div>
+  </div>
+
+  <!-- JANTA -->
+  <div class="meal-card" id="card-janta">
+    <div class="meal-header" onclick="toggleMeal('janta')">
+      <div class="meal-icon">🌙</div>
+      <div class="meal-title-block">
+        <div class="meal-name">Janta</div>
+        <div class="meal-kcal" id="kcal-janta">886 kcal • 47g prot</div>
+      </div>
+      <div class="meal-status-btn">
+        <button class="status-dot ok" onclick="setStatus(event,'janta','ok')">✓</button>
+        <button class="status-dot fora" onclick="setStatus(event,'janta','fora')">🍽</button>
+        <button class="status-dot errado" onclick="setStatus(event,'janta','errado')">✗</button>
+      </div>
+    </div>
+    <div class="meal-body hidden" id="body-janta">
+      <div class="food-item">
+        <span class="food-name">Pão Francês (×2)</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="2" onchange="recalc()" id="q-pao-j"><span class="qty-unit">un</span></div>
+        <span class="food-prot">14g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Patinho Moído (hambúrguer)</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="120" onchange="recalc()" id="q-patm-j"><span class="qty-unit">g</span></div>
+        <span class="food-prot">31g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Queijo Fatiado</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="30" onchange="recalc()" id="q-queijo-j"><span class="qty-unit">g</span></div>
+        <span class="food-prot">8g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Uva Passa</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="20" onchange="recalc()" id="q-uva-j"><span class="qty-unit">g</span></div>
+        <span class="food-prot">0g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">🍠 Batata Monalisa (purê)</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="200" onchange="recalc()" id="q-batata-j"><span class="qty-unit">g</span></div>
+        <span class="food-prot">2g</span>
+      </div>
+      <div class="food-item">
+        <span class="food-name">Leite (purê)</span>
+        <div class="food-qty"><input class="qty-input" type="number" value="150" onchange="recalc()" id="q-leite-j"><span class="qty-unit">ml</span></div>
+        <span class="food-prot">5g</span>
+      </div>
+      <div class="meal-totals">
+        <div class="macro-pill"><div class="macro-pill-val" style="color:var(--accent)">886</div><div class="macro-pill-lbl">KCAL</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#ff9f45">99g</div><div class="macro-pill-lbl">CARB</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:var(--accent2)">60g</div><div class="macro-pill-lbl">PROT</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#aaa">27g</div><div class="macro-pill-lbl">GORD</div></div>
+      </div>
+      <div class="obs-area"><textarea class="obs-input" placeholder="Observação da janta..." id="obs-janta"></textarea></div>
+    </div>
+  </div>
+
+  <div class="nota-geral">
+    <div class="section-title">📝 NOTA DO DIA</div>
+    <textarea class="obs-input" style="height:80px" placeholder="Como foi o dia? Treino, disposição, qualquer observação..." id="obs-dia"></textarea>
+  </div>
+
+  <button class="export-btn" onclick="salvarDia()">💾 SALVAR DIA</button>
+</div>
+
+<!-- SEÇÃO CONTROLE -->
+<div class="section" id="sec-controle">
+  <div class="section-title">💧 ÁGUA</div>
+  <div class="tracker-card full">
+    <div class="tracker-label">Meta: 3,8 Litros / dia</div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <div class="tracker-value" id="aguaVal">0,0</div>
+      <div class="tracker-unit">L de 3,8L</div>
+    </div>
+    <div style="margin-top:8px;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+      <div id="aguaFill" style="height:100%;background:#4a7fff;border-radius:3px;width:0%;transition:width 0.3s"></div>
+    </div>
+    <div class="agua-drops" id="aguaDrops"></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px">Cada gota = 200ml. Toque para marcar.</div>
+  </div>
+
+  <div class="section-title">💊 SUPLEMENTOS</div>
+  <div class="supl-list">
+    <div class="supl-item">
+      <div><div class="supl-name">🥛 Whey Protein</div><div class="supl-dose">30g pós-treino</div></div>
+      <button class="supl-check" id="supl-whey" onclick="toggleSupl('whey')">○</button>
+    </div>
+    <div class="supl-item">
+      <div><div class="supl-name">🟣 Creatina</div><div class="supl-dose">5g/dia</div></div>
+      <button class="supl-check" id="supl-creatina" onclick="toggleSupl('creatina')">○</button>
+    </div>
+    <div class="supl-item">
+      <div><div class="supl-name">🟤 Pó de Beterraba</div><div class="supl-dose">5g — 2h antes do treino</div></div>
+      <button class="supl-check" id="supl-beterraba" onclick="toggleSupl('beterraba')">○</button>
+    </div>
+  </div>
+
+  <div class="section-title">⚖️ PESO</div>
+  <div class="tracker-card full">
+    <div class="tracker-label">Peso do dia (kg) — registrar em jejum</div>
+    <input class="peso-input-big" type="number" step="0.1" value="84.0" id="pesoInput" placeholder="84.0">
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Referência bulking: 84kg → meta 87–88kg</div>
+  </div>
+
+  <button class="export-btn" onclick="salvarDia()">💾 SALVAR DIA</button>
+</div>
+
+<!-- SEÇÃO HISTÓRICO -->
+<div class="section" id="sec-historico">
+  <div class="section-title">📊 HISTÓRICO</div>
+  <div id="historicoList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:40px 0">Nenhum registro ainda.<br>Salve o primeiro dia!</div></div>
+  <button class="export-btn" onclick="exportarJSON()" style="background:var(--surface);color:var(--accent);border:1px solid var(--accent)">📤 EXPORTAR JSON</button>
+</div>
+
+</div><!-- end content -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('refeicoes',this)">
+    <div class="nav-icon">🍽</div><div class="nav-label">Refeições</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('controle',this)">
+    <div class="nav-icon">💧</div><div class="nav-label">Controle</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('historico',this)">
+    <div class="nav-icon">📊</div><div class="nav-label">Histórico</div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────
+let currentDate = new Date();
+let history = JSON.parse(localStorage.getItem('bulkingLog') || '{}');
+let aguaCount = 0;
+const META_KCAL = 3250;
+const AGUA_DROPS = 19; // 19 × 200ml = 3800ml
+
+// Status das refeições
+let mealStatus = { cafe: null, almoco: null, lanche: null, janta: null };
+let suplStatus = { whey: false, creatina: false, beterraba: false };
+
+// ─── DATA ──────────────────────────────────────────────────────
+function formatDate(d) {
+  const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+function dateKey(d) {
+  return d.toISOString().split('T')[0];
+}
+function changeDay(n) {
+  currentDate.setDate(currentDate.getDate() + n);
+  loadDay();
+}
+function updateDateLabel() {
+  const today = new Date();
+  const isToday = dateKey(currentDate) === dateKey(today);
+  document.getElementById('dateLabel').textContent = isToday ? 'Hoje' : formatDate(currentDate);
+}
+
+// ─── TABS / PAGES ────────────────────────────────────────────────
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function switchPage(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── MEAL TOGGLE ─────────────────────────────────────────────────
+function toggleMeal(id) {
+  const body = document.getElementById('body-' + id);
+  body.classList.toggle('hidden');
+}
+
+// ─── STATUS ──────────────────────────────────────────────────────
+function setStatus(e, meal, status) {
+  e.stopPropagation();
+  mealStatus[meal] = mealStatus[meal] === status ? null : status;
+  updateMealCard(meal);
+}
+function updateMealCard(meal) {
+  const card = document.getElementById('card-' + meal);
+  card.className = 'meal-card';
+  const s = mealStatus[meal];
+  if (s) card.classList.add('status-' + s);
+  // dots
+  ['ok','fora','errado'].forEach(st => {
+    const btn = card.querySelector('.status-dot.' + st);
+    btn.classList.toggle('active', s === st);
+  });
+}
+
+// ─── ÁGUA ────────────────────────────────────────────────────────
+function buildAguaDrops() {
+  const cont = document.getElementById('aguaDrops');
+  cont.innerHTML = '';
+  for (let i = 0; i < AGUA_DROPS; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'drop-btn' + (i < aguaCount ? ' filled' : '');
+    btn.textContent = '💧';
+    btn.onclick = () => { aguaCount = (aguaCount === i+1) ? i : i+1; buildAguaDrops(); updateAgua(); };
+    cont.appendChild(btn);
+  }
+}
+function updateAgua() {
+  const litros = (aguaCount * 0.2).toFixed(1);
+  document.getElementById('aguaVal').textContent = litros.replace('.', ',');
+  const pct = Math.min(100, aguaCount / AGUA_DROPS * 100);
+  document.getElementById('aguaFill').style.width = pct + '%';
+}
+
+// ─── SUPLEMENTOS ─────────────────────────────────────────────────
+function toggleSupl(id) {
+  suplStatus[id] = !suplStatus[id];
+  const btn = document.getElementById('supl-' + id);
+  btn.classList.toggle('done', suplStatus[id]);
+  btn.textContent = suplStatus[id] ? '✓' : '○';
+}
+
+// ─── RECALC KCAL ─────────────────────────────────────────────────
+function recalc() {
+  // Soma kcal fixas por refeição (simplificado — usa valores base do cardápio)
+  const kcalCafe = 564;
+  const kcalAlmoco = 848;
+  const kcalLanche = 918;
+  const kcalJanta = 886;
+  const total = [
+    mealStatus.cafe !== null ? kcalCafe : 0,
+    mealStatus.almoco !== null ? kcalAlmoco : 0,
+    mealStatus.lanche !== null ? kcalLanche : 0,
+    mealStatus.janta !== null ? kcalJanta : 0,
+  ].reduce((a,b)=>a+b,0);
+  const allDone = Object.values(mealStatus).every(v => v !== null);
+  const kcalTotal = allDone ? (kcalCafe+kcalAlmoco+kcalLanche+kcalJanta) : total;
+  const display = allDone ? kcalCafe+kcalAlmoco+kcalLanche+kcalJanta : total;
+  document.getElementById('kcalDone').textContent = display;
+  const pct = Math.min(100, Math.round(display / META_KCAL * 100));
+  document.getElementById('kcalFill').style.width = pct + '%';
+  document.getElementById('kcalPct').textContent = pct + '%';
+  const fill = document.getElementById('kcalFill');
+  fill.style.background = pct >= 100 ? 'var(--accent2)' : pct >= 80 ? 'var(--accent)' : 'var(--accent)';
+}
+
+// ─── SALVAR DIA ───────────────────────────────────────────────────
+function salvarDia() {
+  const key = dateKey(currentDate);
+  history[key] = {
+    date: key,
+    peso: parseFloat(document.getElementById('pesoInput').value) || null,
+    agua: aguaCount,
+    meals: { ...mealStatus },
+    supls: { ...suplStatus },
+    obs: {
+      cafe: document.getElementById('obs-cafe').value,
+      almoco: document.getElementById('obs-almoco').value,
+      lanche: document.getElementById('obs-lanche').value,
+      janta: document.getElementById('obs-janta').value,
+      dia: document.getElementById('obs-dia').value,
+    },
+    kcal: 3216
+  };
+  localStorage.setItem('bulkingLog', JSON.stringify(history));
+  renderHistorico();
+  showToast('✅ Dia salvo!');
+}
+
+// ─── CARREGAR DIA ─────────────────────────────────────────────────
+function loadDay() {
+  updateDateLabel();
+  const key = dateKey(currentDate);
+  const d = history[key];
+  // Reset
+  mealStatus = { cafe: null, almoco: null, lanche: null, janta: null };
+  suplStatus = { whey: false, creatina: false, beterraba: false };
+  aguaCount = 0;
+  if (d) {
+    mealStatus = { ...d.meals };
+    suplStatus = { ...d.supls };
+    aguaCount = d.agua || 0;
+    if (d.peso) document.getElementById('pesoInput').value = d.peso;
+    if (d.obs) {
+      document.getElementById('obs-cafe').value = d.obs.cafe || '';
+      document.getElementById('obs-almoco').value = d.obs.almoco || '';
+      document.getElementById('obs-lanche').value = d.obs.lanche || '';
+      document.getElementById('obs-janta').value = d.obs.janta || '';
+      document.getElementById('obs-dia').value = d.obs.dia || '';
+    }
+  } else {
+    ['obs-cafe','obs-almoco','obs-lanche','obs-janta','obs-dia'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
+  ['cafe','almoco','lanche','janta'].forEach(updateMealCard);
+  ['whey','creatina','beterraba'].forEach(id => {
+    const btn = document.getElementById('supl-' + id);
+    btn.classList.toggle('done', suplStatus[id]);
+    btn.textContent = suplStatus[id] ? '✓' : '○';
+  });
+  buildAguaDrops();
+  updateAgua();
+  recalc();
+}
+
+// ─── HISTÓRICO ────────────────────────────────────────────────────
+function renderHistorico() {
+  const cont = document.getElementById('historicoList');
+  const keys = Object.keys(history).sort().reverse();
+  if (!keys.length) { cont.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px 0">Nenhum registro ainda.</div>'; return; }
+  cont.innerHTML = keys.map(k => {
+    const d = history[k];
+    const agua = ((d.agua || 0) * 0.2).toFixed(1);
+    const aguaOk = d.agua >= 19;
+    const meals = ['cafe','almoco','lanche','janta'];
+    const mealLabels = { cafe:'Café', almoco:'Almoço', lanche:'Lanche', janta:'Janta' };
+    const mealBadges = meals.map(m => {
+      const s = d.meals[m];
+      if (!s) return '';
+      return `<span class="hist-badge ${s}">${mealLabels[m]}</span>`;
+    }).join('');
+    const suplIcons = [d.supls?.whey?'🥛':'',d.supls?.creatina?'🟣':'',d.supls?.beterraba?'🟤':''].filter(Boolean).join(' ');
+    return `<div class="hist-card">
+      <div class="hist-date">${k} ${d.peso ? `· <b>${d.peso}kg</b>` : ''}</div>
+      <div class="hist-row">
+        <span style="font-size:13px">💧 ${agua}L ${aguaOk ? '✅' : ''}</span>
+        <span style="font-size:13px">${suplIcons || '—'}</span>
+      </div>
+      <div class="hist-meals">${mealBadges || '<span style="color:var(--muted);font-size:11px">Sem registro</span>'}</div>
+      ${d.obs?.dia ? `<div style="font-size:11px;color:var(--muted);margin-top:6px">${d.obs.dia}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────
+function exportarJSON() {
+  const blob = new Blob([JSON.stringify(history, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bulking_log_${dateKey(new Date())}.json`;
+  a.click();
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;padding:10px 20px;border-radius:20px;font-weight:600;font-size:14px;z-index:9999;';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────
+buildAguaDrops();
+loadDay();
+renderHistorico();
+</script>
+</body>
+</html>
