@@ -109,14 +109,36 @@
     display: none; font-size: 0.8rem;
   }
   .meal-detail.open { display: block; }
-  .macro-row { display: flex; gap: 16px; color: var(--muted); }
+  .macro-row { display: flex; gap: 16px; color: var(--muted); flex-wrap: wrap; }
   .macro-row span { display: flex; align-items: center; gap: 4px; }
   .macro-row b { color: var(--text); }
-  .meal-note { margin-top: 8px; }
+
+  /* FOOD ITEMS TABLE */
+  .food-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.78rem; }
+  .food-table th {
+    text-align: left; color: var(--muted); font-weight: 600; padding: 4px 6px;
+    border-bottom: 1px solid var(--border); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .food-table th:not(:first-child) { text-align: right; }
+  .food-table td { padding: 6px 6px; border-bottom: 1px solid rgba(46,51,71,0.5); vertical-align: middle; }
+  .food-table td:not(:first-child) { text-align: right; color: var(--muted); }
+  .food-table tr:last-child td { border-bottom: none; }
+  .food-table .item-name { color: var(--text); font-weight: 500; }
+  .food-table .item-qty { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+  .food-table tfoot td {
+    font-weight: 700; color: var(--text); border-top: 1px solid var(--border);
+    border-bottom: none; padding-top: 8px;
+  }
+  .badge-kcal { color: var(--accent); }
+  .badge-prot { color: var(--orange); }
+  .badge-carb { color: var(--yellow); }
+  .badge-fat  { color: #94a3b8; }
+
+  .meal-note { margin-top: 10px; }
   .meal-note textarea {
     width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
     border-radius: 8px; padding: 8px 10px; font-size: 0.8rem; resize: none;
-    font-family: inherit; min-height: 56px;
+    font-family: inherit; min-height: 52px;
   }
   .meal-note textarea:focus { outline: none; border-color: var(--accent); }
   .meal-note textarea::placeholder { color: var(--muted); }
@@ -260,13 +282,13 @@
     <div class="summary-card">
       <div class="label">Kcal consumidas</div>
       <div class="value" id="s-kcal">0</div>
-      <div class="sub">meta: 3.250 kcal</div>
+      <div class="sub">meta: 3.216 kcal</div>
       <div class="progress-bar"><div class="progress-fill" id="p-kcal" style="width:0%;background:var(--accent)"></div></div>
     </div>
     <div class="summary-card">
       <div class="label">Proteína</div>
       <div class="value" id="s-prot">0g</div>
-      <div class="sub">meta: 164g</div>
+      <div class="sub">meta: 179g</div>
       <div class="progress-bar"><div class="progress-fill" id="p-prot" style="width:0%;background:var(--orange)"></div></div>
     </div>
     <div class="summary-card">
@@ -344,20 +366,65 @@
 
 <script>
 const MEALS = [
-  { id: 'cafe', name: 'Café da Manhã', icon: '🍳', kcal: 564, prot: 26, carb: 72, fat: 18,
-    desc: 'Aveia c/ banana, ovos, leite' },
-  { id: 'almoco', name: 'Almoço', icon: '🍱', kcal: 748, prot: 56, carb: 82, fat: 20,
-    desc: 'Arroz, feijão, frango, salada' },
-  { id: 'lanche', name: 'Lanche da Tarde', icon: '🥤', kcal: 918, prot: 35, carb: 110, fat: 30,
-    desc: 'Whey, frutas, castanhas, pão' },
-  { id: 'janta', name: 'Janta', icon: '🍽️', kcal: 886, prot: 47, carb: 90, fat: 25,
-    desc: 'Carne/peixe, batata, legumes' }
+  {
+    id: 'cafe', name: 'Café da Manhã', icon: '☀️',
+    items: [
+      { name: 'Atum ½ lata',        qty: '52g',       kcal: 60,  prot: 13, carb: 0,  fat: 1  },
+      { name: 'Requeijão Light',     qty: '20g',       kcal: 30,  prot: 2,  carb: 1,  fat: 2  },
+      { name: 'Pão Francês',         qty: '1 un (65g)',kcal: 174, prot: 5,  carb: 35, fat: 1  },
+      { name: 'Leite integral',      qty: '150ml',     kcal: 97,  prot: 5,  carb: 7,  fat: 5  },
+      { name: 'Banana ou Mamão',     qty: '150g',      kcal: 112, prot: 1,  carb: 28, fat: 0  },
+      { name: 'Mel',                 qty: '30g',       kcal: 91,  prot: 0,  carb: 25, fat: 0  },
+    ]
+  },
+  {
+    id: 'almoco', name: 'Almoço', icon: '🥗',
+    items: [
+      { name: 'Macarrão cozido',              qty: '265g (ou Arroz 200g)',       kcal: 350, prot: 12, carb: 71, fat: 2  },
+      { name: 'Lombo suíno grelhado',         qty: '125g (ou Patinho Pedaço 150g)',kcal: 265, prot: 37, carb: 0,  fat: 13 },
+      { name: 'Feijão cozido',                qty: '100g (ou Lentilha)',          kcal: 86,  prot: 6,  carb: 15, fat: 1  },
+      { name: 'Uva Passa',                    qty: '30g',                         kcal: 90,  prot: 1,  carb: 22, fat: 0  },
+      { name: 'Legumes',                      qty: '80g',                         kcal: 57,  prot: 2,  carb: 12, fat: 0  },
+    ]
+  },
+  {
+    id: 'lanche', name: 'Lanche da Tarde', icon: '🥤',
+    items: [
+      { name: 'Vitamina — Banana ou Mamão', qty: '150g',  kcal: 133, prot: 1,  carb: 34, fat: 0  },
+      { name: 'Vitamina — Aveia',           qty: '10g',   kcal: 38,  prot: 1,  carb: 7,  fat: 1  },
+      { name: 'Vitamina — Leite integral',  qty: '200ml', kcal: 130, prot: 7,  carb: 10, fat: 7  },
+      { name: 'Vitamina — Mel',             qty: '20g',   kcal: 61,  prot: 0,  carb: 17, fat: 0  },
+      { name: 'Vitamina — Pasta Amendoim',  qty: '20g',   kcal: 118, prot: 5,  carb: 4,  fat: 9  },
+      { name: '2 Pães Franceses',           qty: '110g',  kcal: 295, prot: 9,  carb: 60, fat: 2  },
+      { name: '2 Ovos cozidos',             qty: '90g',   kcal: 143, prot: 12, carb: 1,  fat: 10 },
+    ]
+  },
+  {
+    id: 'janta', name: 'Janta', icon: '🌙',
+    items: [
+      { name: '2 Pães Franceses',          qty: '100g',  kcal: 268, prot: 8,  carb: 54, fat: 2  },
+      { name: 'Patinho Moído hambúrguer',  qty: '120g',  kcal: 183, prot: 33, carb: 0,  fat: 6  },
+      { name: 'Queijo',                    qty: '30g',   kcal: 100, prot: 7,  carb: 0,  fat: 8  },
+      { name: 'Uva Passa',                 qty: '20g',   kcal: 60,  prot: 1,  carb: 15, fat: 0  },
+      { name: 'Purê Batata Monalisa',      qty: '200g',  kcal: 178, prot: 6,  carb: 42, fat: 1  },
+      { name: 'Leite integral',            qty: '150ml', kcal: 97,  prot: 5,  carb: 7,  fat: 5  },
+    ]
+  }
 ];
 
+function mealTotals(meal) {
+  return meal.items.reduce((acc, it) => ({
+    kcal: acc.kcal + it.kcal,
+    prot: acc.prot + it.prot,
+    carb: acc.carb + it.carb,
+    fat:  acc.fat  + it.fat
+  }), { kcal: 0, prot: 0, carb: 0, fat: 0 });
+}
+
 const SUPPLEMENTS = [
-  { id: 'whey', name: 'Whey Protein', dose: '30g pós-treino' },
-  { id: 'creatina', name: 'Creatina', dose: '5g/dia com água' },
-  { id: 'beterraba', name: 'Beterraba em Pó', dose: '10g pré-treino' }
+  { id: 'whey',      name: 'Whey Protein',    dose: '30g — pós-treino' },
+  { id: 'creatina',  name: 'Creatina',         dose: '5g/dia — com água' },
+  { id: 'beterraba', name: 'Pó de Beterraba',  dose: '5g — 2h antes do treino' }
 ];
 
 const WATER_CUPS = 19;
@@ -428,17 +495,28 @@ function renderMeals(data) {
   const container = document.getElementById('meals-container');
   container.innerHTML = '';
   MEALS.forEach(meal => {
-    const status = data.meals[meal.id] || 'none'; // none | done | skipped
+    const status = data.meals[meal.id] || 'none';
     const note = data.mealNotes[meal.id] || '';
+    const tot = mealTotals(meal);
     const card = document.createElement('div');
     card.className = `meal-card ${status !== 'none' ? status : ''}`;
     card.id = `meal-card-${meal.id}`;
+
+    const itemRows = meal.items.map(it => `
+      <tr>
+        <td><div class="item-name">${it.name}</div><div class="item-qty">${it.qty}</div></td>
+        <td class="badge-kcal">${it.kcal}</td>
+        <td class="badge-prot">${it.prot}g</td>
+        <td class="badge-carb">${it.carb}g</td>
+        <td class="badge-fat">${it.fat}g</td>
+      </tr>`).join('');
+
     card.innerHTML = `
       <div class="meal-header" onclick="toggleMealDetail('${meal.id}')">
         <span class="meal-icon">${meal.icon}</span>
         <div class="meal-info">
           <div class="meal-name">${meal.name}</div>
-          <div class="meal-kcal">${meal.kcal} kcal · ${meal.prot}g prot · ${meal.desc}</div>
+          <div class="meal-kcal">${tot.kcal} kcal · ${tot.prot}g prot · ${meal.items.length} itens</div>
         </div>
         <div class="meal-actions" onclick="event.stopPropagation()">
           <button class="btn-status ${status === 'done' ? 'active-done' : ''}"
@@ -448,13 +526,28 @@ function renderMeals(data) {
         </div>
       </div>
       <div class="meal-detail" id="meal-detail-${meal.id}">
-        <div class="macro-row">
-          <span>🔥 <b>${meal.kcal}</b> kcal</span>
-          <span>🥩 <b>${meal.prot}g</b> prot</span>
-          <span>🌾 <b>${meal.carb}g</b> carb</span>
-          <span>🧈 <b>${meal.fat}g</b> fat</span>
-        </div>
-        <div class="meal-note" style="margin-top:10px">
+        <table class="food-table">
+          <thead>
+            <tr>
+              <th>Alimento</th>
+              <th class="badge-kcal">Kcal</th>
+              <th class="badge-prot">Prot</th>
+              <th class="badge-carb">Carb</th>
+              <th class="badge-fat">Fat</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td class="badge-kcal">${tot.kcal}</td>
+              <td class="badge-prot">${tot.prot}g</td>
+              <td class="badge-carb">${tot.carb}g</td>
+              <td class="badge-fat">${tot.fat}g</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="meal-note">
           <textarea placeholder="Observação sobre essa refeição (opcional)..."
             oninput="saveMealNote('${meal.id}', this.value)"
             >${note}</textarea>
@@ -538,8 +631,9 @@ function updateSummary(data) {
   let totalKcal = 0, totalProt = 0, doneCount = 0;
   MEALS.forEach(m => {
     if ((data.meals[m.id] || 'none') === 'done') {
-      totalKcal += m.kcal;
-      totalProt += m.prot;
+      const tot = mealTotals(m);
+      totalKcal += tot.kcal;
+      totalProt += tot.prot;
       doneCount++;
     }
   });
@@ -548,8 +642,8 @@ function updateSummary(data) {
   document.getElementById('s-meals').textContent = `${doneCount}/4`;
   document.getElementById('s-meals-sub').textContent =
     doneCount === 0 ? 'nenhuma feita' : doneCount === 4 ? 'todas feitas! 🎉' : `${doneCount} de 4 feitas`;
-  document.getElementById('p-kcal').style.width = Math.min(100, (totalKcal / 3250 * 100)) + '%';
-  document.getElementById('p-prot').style.width = Math.min(100, (totalProt / 164 * 100)) + '%';
+  document.getElementById('p-kcal').style.width = Math.min(100, (totalKcal / 3216 * 100)) + '%';
+  document.getElementById('p-prot').style.width = Math.min(100, (totalProt / 179 * 100)) + '%';
 
   const waterMl = (data.water || 0) * 200;
   document.getElementById('s-water').textContent = waterMl >= 1000 ? (waterMl / 1000).toFixed(1) + 'L' : waterMl + 'ml';
@@ -583,7 +677,7 @@ function renderHistory() {
     let kcal = 0, doneCount = 0, skipCount = 0;
     const dots = MEALS.map(m => {
       const s = (data.meals || {})[m.id] || 'none';
-      if (s === 'done') { kcal += m.kcal; doneCount++; return '<div class="dot done"></div>'; }
+      if (s === 'done') { kcal += mealTotals(m).kcal; doneCount++; return '<div class="dot done"></div>'; }
       if (s === 'skipped') { skipCount++; return '<div class="dot skipped"></div>'; }
       return '<div class="dot none"></div>';
     }).join('');
@@ -673,7 +767,7 @@ function renderStats() {
   const adherence = totalMeals > 0 ? Math.round(totalDone / totalMeals * 100) : 0;
   const avgKcal = keys.length > 0 ? Math.round(keys.reduce((acc, d) => {
     const data = db[d];
-    return acc + MEALS.reduce((s, m) => s + ((data.meals||{})[m.id] === 'done' ? m.kcal : 0), 0);
+    return acc + MEALS.reduce((s, m) => s + ((data.meals||{})[m.id] === 'done' ? mealTotals(m).kcal : 0), 0);
   }, 0) / keys.length) : 0;
 
   const grid = document.getElementById('stats-grid');
