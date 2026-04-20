@@ -4,40 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Diário de Treino — Willian</title>
-<!-- PWA: instalável na tela inicial -->
-<meta name="theme-color" content="#0a0a0a">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Treino Log">
-<!-- Manifest inline via blob (não precisa de servidor) -->
-<script>
-(function(){
-  const manifest = {
-    name: "Diário de Treino — Willian",
-    short_name: "Treino Log",
-    description: "Registro de treinos ABC×2",
-    start_url: ".",
-    display: "standalone",
-    background_color: "#0a0a0a",
-    theme_color: "#0a0a0a",
-    orientation: "portrait",
-    icons: [
-      {
-        src: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%230a0a0a'/><text x='96' y='130' font-size='110' text-anchor='middle'>💪</text></svg>`),
-        sizes: "192x192",
-        type: "image/svg+xml"
-      }
-    ]
-  };
-  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('link');
-  link.rel = 'manifest';
-  link.href = url;
-  document.currentScript.parentNode.insertBefore(link, document.currentScript.nextSibling);
-})();
-</script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -81,8 +47,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .week-label { font-size: 10px; color: var(--muted2); margin-left: auto; font-weight: 600; }
 
 /* ── BOTTOM NAV ── */
-/* FIX: bottom:60px para ficar acima da barra do tiiny.host (~50px) */
-.bottom-nav { position: fixed; bottom: 60px; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; padding: 8px 0 20px; z-index: 200; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; padding: 8px 0 20px; z-index: 200; }
 .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 0; }
 .nav-icon { font-size: 20px; }
 .nav-label { font-size: 9px; color: var(--muted2); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
@@ -90,8 +55,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .nav-item.active .nav-icon { filter: drop-shadow(0 0 4px var(--gold)); }
 
 /* ── CONTENT ── */
-/* FIX: padding-bottom aumentado para compensar bottom-nav (60px) + barra tiiny.host (60px) */
-.content { padding: 12px 16px 160px; }
+.content { padding: 12px 16px 100px; }
 .page { display: none; }
 .page.active { display: block; }
 
@@ -212,6 +176,15 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .ex-add-row input:last-child { flex: 0 0 70px; }
 .mini-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--gold); font-size: 18px; padding: 6px 12px; cursor: pointer; }
 
+/* ── EDIT EXERCISE ── */
+.edit-btn { background: none; border: none; color: var(--muted2); font-size: 15px; cursor: pointer; padding: 4px 6px; flex-shrink: 0; line-height: 1; }
+.edit-btn:active { color: var(--gold); }
+.edit-form { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+.edit-form select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; padding: 7px 10px; width: 100%; }
+.edit-form-label { font-size: 9px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: -4px; }
+.edit-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+.edit-btns button { margin: 0; padding: 10px; font-size: 14px; }
+
 /* ── TOAST ── */
 .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 14px; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
 .toast.show { opacity: 1; }
@@ -282,15 +255,6 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 </div>
 
 <div class="toast" id="toast"></div>
-
-<!-- Botão de instalação PWA -->
-<div id="pwa-install-bar" style="display:none;position:fixed;top:0;left:0;right:0;background:#f5c842;color:#000;padding:10px 16px;z-index:9999;align-items:center;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
-  <span>📲 INSTALAR NA TELA INICIAL</span>
-  <div style="display:flex;gap:8px">
-    <button id="pwa-install-btn" style="background:#000;color:#f5c842;border:none;border-radius:8px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px">INSTALAR</button>
-    <button id="pwa-dismiss-btn" style="background:rgba(0,0,0,0.2);color:#000;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px">✕</button>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════════════════════
      SCRIPT
@@ -408,6 +372,7 @@ function changeDay(n) {
 function buildWeekDots() {
   const cont = document.getElementById('weekDots');
   const today = new Date(currentDate);
+  // começa na segunda da semana atual
   const dow = today.getDay();
   const monday = new Date(today);
   monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
@@ -460,6 +425,7 @@ function buildTreinoGrid() {
 function renderTreino() {
   const t = treinos[currentTreino];
   const cont = document.getElementById('treinoContent');
+  // Summary
   const doneCount = Object.values(sessionData).filter(d => d && d.done).length;
   const totalEx = t.exercicios.length;
   cont.innerHTML = `
@@ -478,12 +444,27 @@ function renderTreino() {
       </div>
     </div>
   `;
+  // Exercises
   t.exercicios.forEach((ex, idx) => {
     const sd = sessionData[ex.id] || { series: [], obs: '', done: false };
     const isDone = sd.done;
+
+    // Buscar última sessão com dados para este exercício
+    const lastSession = Object.entries(history)
+      .filter(([k,v]) => k !== dateKey(currentDate) && v.treino === currentTreino && v.exercicios?.[ex.id]?.series?.some(s => s?.peso))
+      .sort(([a],[b]) => b.localeCompare(a))[0];
+    let lastHtml = '';
+    if (lastSession) {
+      const [lastDate, lastData] = lastSession;
+      const series = lastData.exercicios[ex.id].series || [];
+      const chips = series.map((s,i) => s?.peso ? `<span style="background:rgba(245,200,66,0.12);color:var(--gold);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600">${s.peso}kg×${s.reps||'?'}</span>` : '').filter(Boolean).join(' ');
+      if (chips) lastHtml = `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 13px;background:rgba(245,200,66,0.05);border-top:1px dashed rgba(245,200,66,0.2)"><span style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap">📅 ${lastDate.slice(5)}</span>${chips}</div>`;
+    }
+    // biset indicator
     let bisetHtml = '';
     if (ex.metodo && ex.metodo.includes('Bi-Set') && ex.biset_com) bisetHtml = `<div class="biset-label">⚡ BI-SET COM #${treinos[currentTreino].exercicios.find(e=>e.id===ex.biset_com)?.ordem || '?'}</div>`;
     if (ex.metodo && ex.metodo.includes('Bi-Set') && ex.biset_de) bisetHtml = `<div class="biset-label">↑ CONTINUAÇÃO DO BI-SET</div>`;
+    // series rows
     let seriesHtml = `<div class="series-header"><span>Série</span><span>Peso (kg)</span><span>Reps</span><span>✓</span></div>`;
     for (let s = 0; s < ex.series; s++) {
       const sd_s = sd.series[s] || {};
@@ -520,8 +501,10 @@ function renderTreino() {
           </div>
           ${ex.obs_tecnica ? `<div style="font-size:10px;color:var(--orange);margin-top:3px">⚡ ${ex.obs_tecnica}</div>` : ''}
         </div>
+        <button class="edit-btn" onclick="editEx('${ex.id}',event)" title="Editar">✏️</button>
         <div class="ex-check${isDone ? ' done' : ''}" onclick="toggleExDone(event,'${ex.id}')">${isDone ? '✓' : ''}</div>
       </div>
+      ${lastHtml}
       <div class="ex-body" id="body-${ex.id}">
         ${seriesHtml}
         <div class="ex-obs">
@@ -548,6 +531,7 @@ function setSerie(exId, idx, field, val) {
   ensureSD(exId);
   if (!sessionData[exId].series[idx]) sessionData[exId].series[idx] = {};
   sessionData[exId].series[idx][field] = val;
+  autoSave();
 }
 function toggleSerieDone(exId, idx, el) {
   ensureSD(exId);
@@ -555,6 +539,7 @@ function toggleSerieDone(exId, idx, el) {
   sessionData[exId].series[idx].done = !sessionData[exId].series[idx].done;
   el.classList.toggle('ok');
   el.textContent = sessionData[exId].series[idx].done ? '✓' : '○';
+  autoSave();
 }
 function toggleExDone(e, exId) {
   e.stopPropagation();
@@ -566,10 +551,88 @@ function toggleExDone(e, exId) {
   const doneCount = Object.values(sessionData).filter(d => d && d.done).length;
   const el = document.querySelector('.summary-item:nth-child(2) .summary-val');
   if (el) el.textContent = doneCount;
+  autoSave();
 }
 function setObs(exId, val) {
   ensureSD(exId);
   sessionData[exId].obs = val;
+  autoSave();
+}
+
+// ─── AUTO-SAVE ────────────────────────────────────────────────────
+function autoSave() {
+  const key = dateKey(currentDate);
+  const elapsed = sessionStart ? Math.floor((Date.now() - sessionStart) / 1000) : 0;
+  history[key] = { treino: currentTreino, data: key, duracao: elapsed, exercicios: JSON.parse(JSON.stringify(sessionData)) };
+  localStorage.setItem('treinoLog', JSON.stringify(history));
+  buildWeekDots();
+}
+
+// ─── EDITAR EXERCÍCIO ─────────────────────────────────────────────
+function editEx(exId, e) {
+  e.stopPropagation();
+  const body = document.getElementById('body-' + exId);
+  body.classList.add('open');
+  const t = treinos[currentTreino];
+  const ex = t.exercicios.find(x => x.id === exId);
+  if (!ex) return;
+  const others = t.exercicios.filter(x => x.id !== exId);
+  const bisetOpts = `<option value="">— Nenhum —</option>` +
+    others.map(x => `<option value="${x.id}" ${ex.biset_com === x.id ? 'selected' : ''}>${x.ordem}. ${x.nome}</option>`).join('');
+  body.innerHTML = `
+    <div class="edit-form">
+      <div class="edit-form-label">Nome do exercício</div>
+      <input class="serie-input" style="width:100%;text-align:left;padding:8px 10px" id="en-${exId}" value="${ex.nome}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div>
+          <div class="edit-form-label">Séries</div>
+          <input class="serie-input" type="number" id="es-${exId}" value="${ex.series}" style="width:100%;text-align:center">
+        </div>
+        <div>
+          <div class="edit-form-label">Reps</div>
+          <input class="serie-input" id="er-${exId}" value="${ex.reps}" style="width:100%;text-align:center">
+        </div>
+      </div>
+      <div class="edit-form-label">Método</div>
+      <input class="serie-input" style="width:100%;text-align:left;padding:8px 10px" id="em-${exId}" value="${ex.metodo || ''}" placeholder="Ex: Bi-Set, Progressão de Carga...">
+      <div class="edit-form-label">Bi-Set com</div>
+      <select id="eb-${exId}">${bisetOpts}</select>
+      <div class="edit-btns">
+        <button class="btn-outline" onclick="renderTreino()">CANCELAR</button>
+        <button class="btn-gold" onclick="saveEditEx('${exId}')">SALVAR</button>
+      </div>
+    </div>`;
+}
+
+function saveEditEx(exId) {
+  const t = treinos[currentTreino];
+  const ex = t.exercicios.find(x => x.id === exId);
+  if (!ex) return;
+  const nome = document.getElementById('en-' + exId)?.value.trim();
+  if (!nome) { showToast('⚠️ Nome não pode ser vazio'); return; }
+  const series = parseInt(document.getElementById('es-' + exId)?.value) || ex.series;
+  const reps   = document.getElementById('er-' + exId)?.value.trim() || ex.reps;
+  const metodo = document.getElementById('em-' + exId)?.value.trim();
+  const newBiset = document.getElementById('eb-' + exId)?.value;
+  // Limpa vínculos antigos
+  if (ex.biset_com) { const p = t.exercicios.find(x => x.id === ex.biset_com); if (p) delete p.biset_de; }
+  if (ex.biset_de)  { const p = t.exercicios.find(x => x.id === ex.biset_de);  if (p) delete p.biset_com; }
+  delete ex.biset_com; delete ex.biset_de;
+  // Aplica novos vínculos
+  if (newBiset) {
+    const partner = t.exercicios.find(x => x.id === newBiset);
+    if (partner) {
+      if (partner.biset_com) { const pp = t.exercicios.find(x => x.id === partner.biset_com); if (pp) delete pp.biset_de; }
+      if (partner.biset_de)  { const pp = t.exercicios.find(x => x.id === partner.biset_de);  if (pp) delete pp.biset_com; }
+      delete partner.biset_com; delete partner.biset_de;
+      ex.biset_com = newBiset;
+      partner.biset_de = exId;
+    }
+  }
+  ex.nome = nome; ex.series = series; ex.reps = reps; ex.metodo = metodo;
+  localStorage.setItem('treinosCustom', JSON.stringify(treinos));
+  showToast(`✅ ${nome} atualizado!`);
+  renderTreino();
 }
 
 // ─── TIMER ───────────────────────────────────────────────────────
@@ -690,6 +753,7 @@ function renderProgresso() {
   const exId = document.getElementById('progExSelect').value;
   const cont = document.getElementById('progBars');
   if (!exId) { cont.innerHTML = '<div style="color:var(--muted2);font-size:12px;width:100%;text-align:center;align-self:center">Selecione um exercício acima</div>'; return; }
+  // Coletar dados
   const sessions = Object.entries(history)
     .filter(([k,v]) => v.exercicios?.[exId]?.series?.some(s => s?.peso))
     .sort(([a],[b]) => a.localeCompare(b))
@@ -700,7 +764,7 @@ function renderProgresso() {
     const series = v.exercicios[exId].series || [];
     const maxS = Math.max(...series.map(s => parseFloat(s?.peso)||0));
     const pct = maxPeso > 0 ? (maxS / maxPeso * 100) : 0;
-    const label = k.slice(5);
+    const label = k.slice(5); // MM-DD
     return `<div class="prog-bar-wrap">
       <div class="prog-bar-val">${maxS}kg</div>
       <div class="prog-bar" style="height:${Math.max(4,pct*0.7)}px"></div>
@@ -786,79 +850,7 @@ function showToast(msg) {
 // ─── INIT ─────────────────────────────────────────────────────────
 document.getElementById('dateLabel').textContent = formatDate(currentDate);
 buildWeekDots();
-buildTreinoGrid();
-renderTreino();
-
-// ─── PWA: SERVICE WORKER & INSTALL ───────────────────────────────
-(function() {
-  const swCode = `
-const CACHE = 'treino-log-v1';
-self.addEventListener('install', e => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-  e.waitUntil(clients.claim());
-});
-self.addEventListener('fetch', e => {
-  if (e.request.url.includes('fonts.googleapis') || e.request.url.includes('fonts.gstatic')) {
-    e.respondWith(
-      caches.open(CACHE).then(cache =>
-        fetch(e.request).then(r => { cache.put(e.request, r.clone()); return r; }).catch(() => cache.match(e.request))
-      )
-    );
-  }
-  else if (e.request.mode === 'navigate') {
-    e.respondWith(
-      caches.open(CACHE).then(cache =>
-        fetch(e.request).then(r => { cache.put(e.request, r.clone()); return r; }).catch(() => cache.match(e.request))
-      )
-    );
-  }
-});
-`;
-  const swBlob = new Blob([swCode], { type: 'application/javascript' });
-  const swUrl = URL.createObjectURL(swBlob);
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register(swUrl, { scope: './' })
-      .then(() => console.log('[PWA] Service Worker registrado'))
-      .catch(err => console.warn('[PWA] SW falhou:', err));
-  }
-
-  let deferredPrompt = null;
-  const bar = document.getElementById('pwa-install-bar');
-  const installBtn = document.getElementById('pwa-install-btn');
-  const dismissBtn = document.getElementById('pwa-dismiss-btn');
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    bar.style.display = 'flex';
-    document.querySelector('.header').style.top = '44px';
-  });
-
-  installBtn.addEventListener('click', () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(choice => {
-      if (choice.outcome === 'accepted') showToast('✅ App instalado!');
-      deferredPrompt = null;
-      bar.style.display = 'none';
-      document.querySelector('.header').style.top = '0';
-    });
-  });
-
-  dismissBtn.addEventListener('click', () => {
-    bar.style.display = 'none';
-    document.querySelector('.header').style.top = '0';
-  });
-
-  window.addEventListener('appinstalled', () => {
-    bar.style.display = 'none';
-    document.querySelector('.header').style.top = '0';
-    showToast('✅ App instalado com sucesso!');
-  });
-})();
+loadSessionForDay();
 </script>
 </body>
 </html>
