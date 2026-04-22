@@ -550,6 +550,12 @@ function getMealStatus(mealId, data) {
 
 // ─────────────── RENDER REFEIÇÕES ───────────────
 function renderMeals(data) {
+  // salva estado aberto antes de recriar o HTML
+  const openDetails = new Set();
+  document.querySelectorAll('.meal-detail.open').forEach(el => openDetails.add(el.id));
+  const openForms = new Set();
+  document.querySelectorAll('.add-item-form.open').forEach(el => openForms.add(el.id));
+
   const container = document.getElementById('meals-container');
   container.innerHTML = '';
   MEALS.forEach(meal => {
@@ -667,6 +673,10 @@ function renderMeals(data) {
       </div>`;
     container.appendChild(card);
   });
+
+  // restaura estado aberto
+  openDetails.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('open'); });
+  openForms.forEach(id =>   { const el = document.getElementById(id); if (el) el.classList.add('open'); });
 }
 
 function toggleMealDetail(id) {
